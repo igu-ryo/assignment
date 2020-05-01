@@ -4,7 +4,7 @@
 #include <math.h>
 
 void display(void);
-void donut(int);
+void donut(double);
 
 
 int main(int argc, char *argv[])
@@ -24,23 +24,22 @@ void display(void)
 	glColor3d(0.0, 1.0, 0.0);
 
 	glBegin(GL_LINES);
-	glVertex2d(2, 3);
-	glVertex2d(200, 30);
-	//donut(10);
+	donut(100);
 	glEnd();
 
 	glFlush();
 }
 
-void donut(int width)
+void donut(double delta)
 {
-	for (int i = 0; i < 360; i++)
+	for (int i = 0; i < 360; i += 2)
 	{
-		double x1 = cos(i * M_PI / 180.0);
-		double y1 = sin(i * M_PI / 180.0);
+		// delta‚Ì•ª‚¾‚¯Šp“x‚ð‚¸‚ç‚·
+		double x1 = cos((i + delta)* M_PI / 180.0);
+		double y1 = sin((i + delta)* M_PI / 180.0);
 		glVertex2d(x1 * 0.5, y1 * 0.5);
 		double x2 = cos(i * M_PI / 180.0);
 		double y2 = sin(i * M_PI / 180.0);
-		glVertex2d(x2 * 0.5, y2 * 0.5);
+		glVertex2d(x2 * 1, y2 * 1);
 	}
 }
