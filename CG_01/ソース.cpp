@@ -26,11 +26,16 @@ const float g_InnerRadius = 6.f;
 const float g_OuterRadius = 7.5f;
 const float g_HeightAmplitude = 0.8f;
 const float g_HeightOffset = 0.2f;
+float g_TeapotHeight[] = { -0.5f, 0.2f, -0.4f, 0.3f, -0.8f, 0.1f, -0.7f, 0.4f};
+const float g_TeapotHeightOffset = 1.f;
+const float g_DeltaTeapotHeight = 0.02f;
+const float g_LimitTeapotHeight = 0.8f;
+bool g_TeapotUpFlg[g_NumTeapots];
 
 const float g_EyeCenterY = 9.f;
 const float g_EyeCenterZ = 30.f;
 const float g_EyeRadius = 8.f;
-float g_EyeY, g_EyeZ;
+float g_EyeY, g_EyeZ, g_EyeDegree;
 
 const int g_AnimationIntervalMsec = 10;
 
@@ -101,6 +106,8 @@ void display() {
 	glMaterialfv(GL_FRONT, GL_SPECULAR, specularColor);
 	glMaterialfv(GL_FRONT, GL_SHININESS, &shininess);
 
+	glRotatef(g_RotationDegree, 0, 1, 0); // 回転させている
+
 	// 屋根
 	glPushMatrix();
 	glTranslatef(0, g_HeightAmplitude + g_HeightOffset + 3.f, 0);
@@ -123,7 +130,6 @@ void display() {
 	// 屋根の上のティーポット
 	glPushMatrix();
 	glTranslatef(0, g_HeightAmplitude + g_HeightOffset + 5.5f, 0);
-	glRotatef(g_RotationDegree, 0, 1, 0); // 回転させている
 	glutSolidTeapot(g_TeapotSize);
 	glPopMatrix();
 
@@ -139,7 +145,7 @@ void display() {
 		const float zPos = g_InnerRadius * cosf(thetaRad);
 
 		// ティーポットの高さ方向の値
-		const float yPos = g_HeightOffset; // ★この値を少しずつ変化させることでティーポットが上下に移動する
+		const float yPos = g_HeightOffset + g_TeapotHeightOffset + g_TeapotHeight[i]; // ★この値を少しずつ変化させることでティーポットが上下に移動する
 
 		// ティーポットの色の指定
 		glMaterialfv(GL_FRONT, GL_AMBIENT, g_Teapots[i].ambient.colors);
@@ -231,6 +237,30 @@ void init() {
 
 // 一定時間ごとに実行される関数
 void timer(int val) {
+	for (int i = 0; i < g_NumTeapots; i++)
+	{
+		// ティーポットの高さが上限と下限を超えたらフラグを変える
+		if (g_TeapotHeight[i] < -g_LimitTeapotHeight)
+		{
+			g_TeapotUpFlg[i] = true;
+		}
+		else if (g_TeapotHeight[i] > g_LimitTeapotHeight)
+		{
+			g_TeapotUpFlg[i] = false;
+		}
+
+		// ティーポットの高さを変更
+		if (g_TeapotUpFlg[i] == true)
+		{
+			g_TeapotHeight[i] += g_DeltaTeapotHeight;
+		}
+		else
+		{
+			g_TeapotHeight[i] -= g_DeltaTeapotHeight;
+		}
+	}
+
+
 	// 回転角度の更新
 	g_RotationDegree += g_DeltaRotationDegree;
 
@@ -238,8 +268,9 @@ void timer(int val) {
 
 	// ★ 下のコードでは視点が固定だけど
 	// ここで  g_EyeY と g_EyeZ の値を変えることで視点位置を変化させることができる
-	g_EyeY = g_EyeCenterY;
-	g_EyeZ = g_EyeCenterZ;
+	g_EyeDegree += 0.02f;
+	g_EyeY = g_EyeCenterY + g_EyeRadius * cos(g_EyeDegree);
+	g_EyeZ = g_EyeCenterZ + g_EyeRadius * sin(g_EyeDegree);
 
 	glutPostRedisplay();
 
