@@ -21,6 +21,7 @@ const int g_NumTeapots = 8;
 TeapotData g_Teapots[g_NumTeapots];
 
 // float型の値は、数字の後ろにfを付ける。末尾のゼロは省略できる
+float g_LightPosDegree;
 const float g_TeapotSize = 1.f;
 const float g_InnerRadius = 6.f;
 const float g_OuterRadius = 7.5f;
@@ -32,15 +33,16 @@ const float g_DeltaTeapotHeight = 0.02f;
 const float g_LimitTeapotHeight = 0.8f;
 bool g_TeapotUpFlg[g_NumTeapots];
 
+const float g_EyeCenterX = 30.f;
 const float g_EyeCenterY = 9.f;
 const float g_EyeCenterZ = 30.f;
-const float g_EyeRadius = 8.f;
-float g_EyeY, g_EyeZ, g_EyeDegree;
+const float g_EyeRadius = 16.f;
+float g_EyeX, g_EyeY, g_EyeZ, g_EyeDegree;
 
 const int g_AnimationIntervalMsec = 10;
 
 float g_RotationDegree = 0.f;
-const float g_DeltaRotationDegree = 0.3;
+const float g_DeltaRotationDegree = 3.f;
 
 int g_WindowWidth = 512;
 int g_WindowHeight = 512;
@@ -97,14 +99,18 @@ void display() {
 	gluLookAt(0.0, g_EyeY, g_EyeZ, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 	float ambientColor[] = { 0.4f, 0.2f, 0.2f, 1.0f };
-	float diffuseColor[] = { 1.f, 0.8f, 0.8f, 1.0f };
-	float specularColor[] = { 0.4f, 0.3f, 0.3f, 1.0f };
-	float shininess = 5.f;
+	float diffuseColor[] = { 1.f, 0.7f, 0.4f, 1.0f };
+	float specularColor[] = { 0.2f, 0.4f, 0.3f, 1.0f };
+	float shininess = 20.f;
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambientColor);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseColor);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, specularColor);
 	glMaterialfv(GL_FRONT, GL_SHININESS, &shininess);
+
+	// こまを傾けてさらに回転させる
+	glRotatef(g_RotationDegree, 0, 1, 0);
+	glRotatef(20, 0, 0, 1);
 
 	glRotatef(g_RotationDegree, 0, 1, 0); // 回転させている
 
@@ -121,10 +127,11 @@ void display() {
 	displayCylinder(0.5f, g_HeightAmplitude + g_HeightOffset + 6.5f, 32);
 	glPopMatrix();
 
-	// 土台
+	// 土台(こま)
 	glPushMatrix();
-	glTranslatef(0, -2.f, 0);
-	displayCylinder(g_OuterRadius, 0.7f, 64);
+	glTranslatef(0, -1.f, 0);
+	glRotatef(90, 1, 0, 0);
+	glutSolidCone(g_OuterRadius, 5.f, 32, 32);
 	glPopMatrix();
 
 	// 屋根の上のティーポット
@@ -187,7 +194,7 @@ void init() {
 	float lightAmbientColor0[] = { 0.2f, 0.2f, 0.2f, 0.0f };
 	float lightDiffuseColor0[] = { 0.4f, 0.4f, 0.4f, 0.0f };
 	float lightSpecularColor0[] = { 0.8f, 0.8f, 0.8f, 0.0f };
-	float lightPosition0[] = { 5.0f, 5.0f, 8.0f, 0.0f };
+	float lightPosition0[] = { 5.0f, 5.0f * cos(g_LightPosDegree), 8.0f, 0.0f };
 
 	float lightAmbientColor1[] = { 0.2f, 0.2f, 0.2f, 0.0f };
 	float lightDiffuseColor1[] = { 0.4f, 0.4f, 0.4f, 0.0f };
@@ -237,6 +244,11 @@ void init() {
 
 // 一定時間ごとに実行される関数
 void timer(int val) {
+	// 光源の位置を変更
+	g_LightPosDegree += 0.01f;
+	float lightPosition0[] = { 5.0f, 5.0f * cos(g_LightPosDegree), 8.0f, 0.0f };
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition0);
+
 	for (int i = 0; i < g_NumTeapots; i++)
 	{
 		// ティーポットの高さが上限と下限を超えたらフラグを変える
@@ -268,9 +280,10 @@ void timer(int val) {
 
 	// ★ 下のコードでは視点が固定だけど
 	// ここで  g_EyeY と g_EyeZ の値を変えることで視点位置を変化させることができる
-	g_EyeDegree += 0.02f;
+	g_EyeDegree += 0.01f;
+	g_EyeX = g_EyeCenterX + g_EyeRadius * cos(g_EyeDegree);
 	g_EyeY = g_EyeCenterY + g_EyeRadius * cos(g_EyeDegree);
-	g_EyeZ = g_EyeCenterZ + g_EyeRadius * sin(g_EyeDegree);
+	g_EyeZ = g_EyeCenterZ + g_EyeRadius * cos(g_EyeDegree);
 
 	glutPostRedisplay();
 
