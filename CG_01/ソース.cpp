@@ -31,6 +31,7 @@ public:
 
 	// 減算の定義
 	// ★加算の定義を参考に、減算のコードを記述してみる
+	Vector3d operator-(Vector3d v) { return Vector3d(x - v.x, y - v.y, z - v.z); }
 
 	// 内積の定義
 	double operator*(Vector3d v) { return x * v.x + y * v.y + z * v.z; }
@@ -46,6 +47,7 @@ public:
 
 	// 減算代入の定義
 	// ★加算代入の定義を参考に、減算代入のコードを記述してみる
+	Vector3d& operator-=(const Vector3d& v) { x -= v.x; y -= v.y; z -= v.z; return (*this); }
 
 	// 値を出力する
 	void print() { printf("Vector3d(%f %f %f)\n", x, y, z); }
@@ -116,9 +118,12 @@ int pickSphere(int x, int y) {
 
 	// ★授業スライドを参考に次のようなプログラムコードを追加する
 	// ★glReadPixels 関数をつかって、クリックした位置が何色であるか取得する
+	GLubyte c[3];
+	glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, c);
+
 	// ★取得した色を見て、どの球体を選択したか判定し、そのIDを return する。
 
-	return -1; // ★適切な値を返すようにする
+	return (c[0] == 255) ? -1 : int(c[0]); // ★適切な値を返すようにする
 }
 
 // 描画関数
@@ -205,12 +210,27 @@ void MousePick(int x, int _y) {
 
 	// ★授業スライドを参考に次のようなプログラムコードを追加する
 	// ★現在のモデルビュー行列を取得する
-	// ★現在の透視投影行列の取得を取得する
-	// ★現在のビューポートの情報を取得
-	// ★マウスクリックした位置の奥行き情報（z値）を取得する
-	// ★上記の情報に基づいて、クリックした位置のワールド座標を取得する
-	// ★取得した値は、g_SelectedPos に格納しておく（←表示の時に使用する）
+	double M[16];
+	glGetDoublev(GL_MODELVIEW_MATRIX, M);
 
+	// ★現在の透視投影行列の取得を取得する
+	double P[16];
+	glGetDoublev(GL_PROJECTION_MATRIX, P);
+
+	// ★現在のビューポートの情報を取得
+	int V[4];
+	glGetIntegerv(GL_VIEWPORT, V);
+
+	// ★マウスクリックした位置の奥行き情報（z値）を取得する
+	float z;
+	glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &z);
+
+	// ★上記の情報に基づいて、クリックした位置のワールド座標を取得する
+	double objx, objy, objz;
+	gluUnProject(x, y, z, M, P, V, &objx, &objy, &objz);
+
+	// ★取得した値は、g_SelectedPos に格納しておく（←表示の時に使用する）
+	g_SelectedPos.set(objx, objy, objz);
 }
 
 // マウスクリックのイベント処理
