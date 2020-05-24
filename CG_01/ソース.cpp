@@ -31,6 +31,7 @@ public:
 
 	// 減算の定義
 	// ★加算の定義を参考に、減算のコードを記述してみる
+	Vector3d operator-(Vector3d v) { return Vector3d(x - v.x, y - v.y, z - v.z); }
 
 	// 内積の定義
 	double operator*(Vector3d v) { return x * v.x + y * v.y + z * v.z; }
@@ -46,6 +47,7 @@ public:
 
 	// 減算代入の定義
 	// ★加算代入の定義を参考に、減算代入のコードを記述してみる
+	Vector3d& operator-=(const Vector3d& v) { x -= v.x; y -= v.y; z -= v.z; return (*this); }
 
 	// 値を出力する
 	void print() { printf("Vector3d(%f %f %f)\n", x, y, z); }
@@ -63,13 +65,28 @@ Vector3d operator/(const Vector3d& v, const double& k) { return(Vector3d(v.x / k
 
 
 int main(int argc, char** argv) {
-	// ベクトルの加算の例
-	Vector3d a(1, 1, 1);
-	Vector3d b(3, 2, -1);
-	Vector3d c = a + b;
-	c.print();
+	Vector3d a(2, 3, 4), b(3, 5, -2), c(2, -1, 1), ans[5], tmp;
+	double ans3;
+	ans[0] = a - b;
+	a.scale(3);
+	b.scale(2);
+	ans[1] = a - b;
+	a.set(2, 3, 4);
+	b.set(3, 5, -2);
+	ans3 = a * b;
+	tmp = a % b;
+	tmp.normalize();
+	ans[3] = tmp;
+	b.scale(2);
+	ans[4] = (a + b) % c;
+
+	ans[0].print();
+	ans[1].print();
+	printf("%lf\n", ans3);
+	ans[3].print();
+	ans[4].print();
 
 	// Visual Studio でコンソールがすぐに閉じないようにするためには次のコメントアウトをはずす
-	//system("pause"); 
+	system("pause"); 
 	return 0;
 }
