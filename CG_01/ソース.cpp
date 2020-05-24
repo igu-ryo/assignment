@@ -1,4 +1,5 @@
 #define FREEGLUT_STATIC
+#define _USE_MATH_DEFINES
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
@@ -64,11 +65,49 @@ Vector3d operator*(const Vector3d& v, const double& k) { return(Vector3d(v.x * k
 Vector3d operator/(const Vector3d& v, const double& k) { return(Vector3d(v.x / k, v.y / k, v.z / k)); }
 
 
+// 円柱を描画する関数（第3回のサンプルコードから引用）
+void displayCylinder(float radius, float height, int nSlices) {
+	// 天頂面
+	const float deltaTheta = 2 * M_PI / (float)nSlices;
+	glNormal3f(0, 1, 0);
+	glBegin(GL_TRIANGLE_FAN);
+	glVertex3f(0, height, 0);
+	for (int i = 0; i <= nSlices; i++) {
+		const float theta = deltaTheta * i;
+		glVertex3f(radius * cosf(theta), height, radius * sinf(theta));
+	}
+	glEnd();
+	// 底面
+	glNormal3f(0, -1, 0);
+	glBegin(GL_TRIANGLE_FAN);
+	glVertex3f(0, 0, 0);
+	for (int i = 0; i <= nSlices; i++) {
+		const float theta = deltaTheta * i;
+		glVertex3f(radius * cosf(theta), 0, radius * sinf(theta));
+	}
+	glEnd();
+	// 側面
+	glBegin(GL_TRIANGLE_STRIP);
+	for (int i = 0; i <= nSlices; i++) {
+		const float theta = deltaTheta * i;
+		const float cosTheta = cosf(theta);
+		const float sinTheta = sinf(theta);
+		glNormal3f(cosTheta, 0, sinTheta);
+		glVertex3f(radius * cosTheta, height, radius * sinTheta);
+		glVertex3f(radius * cosTheta, 0, radius * sinTheta);
+	}
+	glEnd();
+}
+
 // 球体の情報を格納するクラス
 class Sphere {
 public:
 	Vector3d position; // 中心位置
 	float color[3];    // 描画色
+	float degree;	   // 移動用
+	float deltaX, deltaY, deltaZ; // 初期位置との差
+	bool moveFlg = true; // 移動するかしないか
+	float score = 10.f;       // 点数
 
 	void setColor(float r, float g, float b) {
 		color[0] = r; color[1] = g; color[2] = b;
@@ -78,14 +117,36 @@ public:
 	void display() {
 		glPushMatrix(); // 現在のモデル変換行列を退避しておく
 
+		// 移動フラグが立っていれば球体を動かす
+		if (moveFlg)
+		{
+			deltaX = 7 * cos(degree);
+			deltaY = 5 * cos(degree);
+			deltaZ = 3 * cos(degree);
+			score = fmax(0, 10.f - (abs(deltaX) + abs(deltaY) + abs(deltaZ)));
+		}
+		glTranslated(deltaX, deltaY, deltaZ);
+
 		// 座標の平行移動とスケール変換を施して球体を描画する
 		glTranslated(position.x, position.y, position.z);
 		glScaled(2, 2, 2);
-		glutSolidSphere(1.0, 32, 32);
+		glutSolidSphere(1.3, 32, 32);
 
 		glPopMatrix();  // 退避していたモデル変換行列を戻す
 	}
 };
+
+// ゲームのタイトル画面とプレイ画面の切り替え用
+bool g_GameStartFlg = false;
+
+// ゲームのプレイ結果表示用
+bool g_GameEndFlg = false;
+
+// 視点変更用の角度
+float g_HorizontalEyeDegree;
+
+// 円柱の位置
+float g_CylinderPosX = -20;
 
 // 3つの球体を準備しておく
 Sphere g_Sphere[3];
@@ -130,57 +191,151 @@ int pickSphere(int x, int y) {
 void display() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
+	if (g_GameStartFlg)
+	{
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_LIGHTING);
 
-	// 透視投影変換行列の設定
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(30.0, g_WindowWidth / (float)g_WindowHeight, 1.0, 100.0);
+		// 透視投影変換行列の設定
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(30.0, g_WindowWidth / (float)g_WindowHeight, 1.0, 1000.0);
 
-	// カメラビュー座標への変換行列の設定
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(0, 0, 30, 0, 0, 0, 0, 1, 0);
+		// カメラビュー座標への変換行列の設定
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		gluLookAt(100 * cos(g_HorizontalEyeDegree), 10, 100 * sin(g_HorizontalEyeDegree), 0, 0, 0, 0, 1, 0);
 
-	// 3つの球体を描画
-	for (int i = 0; i < 3; i++) {
-		// 球体ごとに色を変更する
-		glMaterialfv(GL_FRONT, GL_DIFFUSE, g_Sphere[i].color);
+		// 3つの球体を描画
+		for (int i = 0; i < 3; i++) {
+			// 球体ごとに色を変更する
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, g_Sphere[i].color);
 
-		// 球体の描画を行う
-		g_Sphere[i].display();
+			// 球体の描画を行う
+			g_Sphere[i].display();
+		}
+
+		// クリア後に動かす円柱の描画
+		glPushMatrix();
+		float cy_c1[3] = { 0.5f, 0.7f, 0 };
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, cy_c1);
+		glTranslatef(g_CylinderPosX, 0, 0);
+		glRotatef(90, 1, 0, 0);
+		glRotatef(90, 0, 0, 1);
+		displayCylinder(0.2f, 30.f, 32);
+		glPopMatrix();
+
+		// 球体の位置をガイドする円柱の描画
+		if (!g_GameEndFlg)
+		{
+			glPushMatrix();
+			float cy_c2[3] = { 1.f, 0, 0 };
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, cy_c2);
+			glTranslatef(9.f, 0, 0);
+			glRotatef(90, 1, 0, 0);
+			glRotatef(90, 0, 0, 1);
+			displayCylinder(0.1f, 30.f, 32);
+			glPopMatrix();
+		}
+
+		// ゲームクリアしたら表示するプレイ結果
+		if (g_GameEndFlg)
+		{
+			glDisable(GL_LIGHTING);
+			glRasterPos3d(0, 10, 0);
+			char res[256];
+			float total = g_Sphere[0].score + g_Sphere[1].score + g_Sphere[2].score;
+			sprintf_s(res, "Score: %0.2f / 30", total);
+
+			// 文字列を1文字ずつ描画
+			for (int i = 0; res[i] != '\0'; i++) {
+				glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, res[i]);
+			}
+
+			// 点数に応じて文字を表示
+			if (total > 15)
+			{
+				glRasterPos3d(0, 7, 0);
+
+				char res2[30];
+				if (total > 25)
+				{
+					sprintf_s(res2, "Excellent!!!");
+				}
+				else if (total > 20)
+				{
+					sprintf_s(res2, "Great!!");
+				}
+				else
+				{
+					sprintf_s(res2, "Good!");
+				}
+
+				for (int i = 0; res2[i] != '\0'; i++) {
+					glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, res2[i]);
+				}
+			}
+
+		}
 	}
+	else
+	{
+		// タイトル画面の文字を表示
 
-	// 球が選択されている状態であれば、クリック座標に関する情報を表示する
-	if (g_SelectedSphereID != -1) {
-		// 照明効果なしで単色描画
+		// 透視投影変換行列の設定
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(30.0, g_WindowWidth / (float)g_WindowHeight, 1.0, 100.0);
+
+		// カメラビュー座標への変換行列の設定
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		gluLookAt(0, 0, 30, 0, 0, 0, 0, 1, 0);
+
 		glDisable(GL_LIGHTING);
-		glDisable(GL_DEPTH_TEST);
 
-		// クリック座標に点を描画
+		char title[30] = "Dango Game";
+		glColor3f(0, 0.4, 0.8);
+		glRasterPos3d(-1.3, 3, 10.f);
+		for (int i = 0; title[i] != '\0'; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, title[i]);
+		}
+
 		glColor3f(1, 0, 0);
-		glPointSize(5.f);
-		glBegin(GL_POINTS);
-		glVertex3d(g_SelectedPos.x, g_SelectedPos.y, g_SelectedPos.z);
-		glEnd();
+		char click[15] = "click to start";
+		glRasterPos3d(-1, 0, 10.f);
+		for (int i = 0; click[i] != '\0'; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, click[i]);
+		}
 
-		// 文字を描画する位置の指定
-		glRasterPos3d(g_SelectedPos.x, g_SelectedPos.y, g_SelectedPos.z);
+		char desc[60] = "how to play: Click dango to stop. Rotate by 'f' or 'a' key.";
+		glColor3f(0, 0, 0);
+		glRasterPos3d(-5, -3, 10.f);
+		for (int i = 0; desc[i] != '\0'; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, desc[i]);
+		}
+	}
+	glutSwapBuffers();
+}
 
-		// 表示する文字列の構築
-		// ※もし sprintf_s でコンパイルエラーになる場合は sprintf を使うこと
-		char str[256];
-		sprintf_s(str, "sphere[%d] (%lf, %lf, %lf)", g_SelectedSphereID,
-			g_SelectedPos.x, g_SelectedPos.y, g_SelectedPos.z);
+// 一定時間ごとに実行される関数
+void timer(int val)
+{
+	g_Sphere[0].degree += 0.07f;
+	g_Sphere[1].degree += 0.1f;
+	g_Sphere[2].degree -= 0.06f;
 
-		// 文字列を1文字ずつ描画
-		for (int i = 0; str[i] != '\0'; i++) {
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, str[i]);
+	// ゲームが終わったら円柱を定位置に移動
+	if (g_GameEndFlg)
+	{
+		if (g_CylinderPosX < 9.5f)
+		{
+			g_CylinderPosX += 0.1f;
 		}
 	}
 
-	glutSwapBuffers();
+	glutPostRedisplay();
+	glutTimerFunc(10, timer, val);
 }
 
 // ウィンドウのサイズが変更されたときの処理
@@ -196,8 +351,6 @@ void resize(int w, int h) {
 // マウスカーソル位置に基づく選択処理
 void MousePick(int x, int _y) {
 
-	printf("MousePick(%d, %d)\n", x, _y);
-
 	// マウスクリックで得られる座標は左下原点なので OpenGLの座標系と合わせるためにy座標を反転する
 	const int y = g_WindowHeight - _y;
 
@@ -205,6 +358,15 @@ void MousePick(int x, int _y) {
 
 	// 球が選択されていないなら何もしない
 	if (g_SelectedSphereID == -1) return;
+
+	// 選択した球体の動きを止める
+	g_Sphere[g_SelectedSphereID].moveFlg = false;
+
+	// 全ての球体の動きが止まったらゲームを終える
+	if (g_Sphere[0].moveFlg == false && g_Sphere[1].moveFlg == false && g_Sphere[2].moveFlg == false)
+	{
+		g_GameEndFlg = true;
+	}
 
 	// クリックした場所の座標値（3次元座標）を取得する
 
@@ -235,7 +397,17 @@ void MousePick(int x, int _y) {
 
 // マウスクリックのイベント処理
 void mouse(int button, int state, int x, int y) {
-	if (state == GLUT_DOWN) MousePick(x, y);
+	if (state == GLUT_DOWN)
+	{
+		if (g_GameStartFlg)
+		{
+			MousePick(x, y);
+		}
+		else
+		{
+			g_GameStartFlg = true;
+		}
+	}
 	glutPostRedisplay();
 }
 
@@ -252,6 +424,13 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'Q':
 	case '\033':
 		exit(0);  /* '\033' は ESC の ASCII コード */
+		break;
+	case 'f':
+		g_HorizontalEyeDegree += 0.2;
+		break;
+	case 'a':
+		g_HorizontalEyeDegree -= 0.2;
+		break;
 	default:
 		break;
 	}
@@ -265,16 +444,16 @@ void init() {
 	g_Sphere[0].position.set(-5, 0, 0);
 	g_Sphere[1].position.set(0, 0, 0);
 	g_Sphere[2].position.set(5, 0, 0);
-	g_Sphere[0].setColor(1, 0, 0);
-	g_Sphere[1].setColor(0, 1, 0);
-	g_Sphere[2].setColor(0, 0, 1);
+	g_Sphere[0].setColor(1, 0.5, 0.5);
+	g_Sphere[1].setColor(1, 1, 0.5);
+	g_Sphere[2].setColor(0.3, 0.4, 0);
 
 	glClearDepth(1000.0);
 	glClearColor(1, 1, 1, 1); // 背景の色を白に設定
 
 	// 照明の設定
 	float lightAmbientColor[] = { 0.2f, 0.2f, 0.2f, 0.0f };
-	float lightDiffuseColor[] = { 1.f, 1.f, 1.f, 0.0f };
+	float lightDiffuseColor[] = { 3.f, 3.f, 3.f, 0.0f };
 	float lightSpecularColor[] = { 0.4f, 0.4f, 0.4f, 0.0f };
 	float lightPosition[] = { 0.0f, 30.0f, 30.0f, 0.0f };
 	glEnable(GL_LIGHTING);
@@ -303,6 +482,7 @@ int main(int argc, char** argv) {
 
 	glutDisplayFunc(display);
 	glutReshapeFunc(resize);
+	glutTimerFunc(10, timer, 0);
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 	glutKeyboardFunc(keyboard);
