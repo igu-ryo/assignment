@@ -113,7 +113,6 @@ void display(void) {
 
 		// 法線の描画
 
-		const double width = 20.0;
 		glColor3d(0.0, 0.0, 1.0);
 		glLineWidth(1);
 
@@ -125,11 +124,23 @@ void display(void) {
 				+ 3 * t * pow(1 - t, 2) * p1
 				+ 3 * t * t * (1 - t) * p2
 				+ pow(t, 3) * p3;
-
+			
+			// 1階微分
 			Vector2d p_ = -3 * pow(1 - t, 2) * p0
 				+ (9 * t * t - 12 * t + 3) * p1
 				+ (-9 * t * t + 6 * t) * p2
 				+ 3 * t * t * p3;
+
+			// 2階微分
+			Vector2d _p_ = 6 * (1 - t) * p0
+				+ (18 * t - 12) * p1
+				+ (-18 * t + 6) * p2
+				+ 6 * t * p3;
+
+			// 曲率
+			double k = (p_.x * _p_.y - p_.y * _p_.x) / sqrt(pow((p_.x * p_.x + p_.y * p_.y), 3));
+
+			double width = fmin(10.0, 1000 * k); // 線の太さを制限する
 
 			p_.normalize();
 
