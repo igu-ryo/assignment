@@ -4,7 +4,7 @@
 #include <vector>
 #include <GL/glut.h>
 
-// 2ŸŒ³ƒxƒNƒgƒ‹‚ğˆµ‚¤‚½‚ß‚ÌƒNƒ‰ƒX
+// 2æ¬¡å…ƒãƒ™ã‚¯ãƒˆãƒ«ã‚’æ‰±ã†ãŸã‚ã®ã‚¯ãƒ©ã‚¹
 class Vector2d {
 public:
 	double x, y;
@@ -12,61 +12,61 @@ public:
 	Vector2d(double _x, double _y) { x = _x; y = _y; }
 	void set(double _x, double _y) { x = _x; y = _y; }
 
-	// ’·‚³‚ğ1‚É³‹K‰»‚·‚é
+	// é•·ã•ã‚’1ã«æ­£è¦åŒ–ã™ã‚‹
 	void normalize() {
 		double len = length();
 		x /= len; y /= len;
 	}
 
-	// ’·‚³‚ğ•Ô‚·
+	// é•·ã•ã‚’è¿”ã™
 	double length() { return sqrt(x * x + y * y); }
 
-	// s”{‚·‚é
+	// så€ã™ã‚‹
 	void scale(const double s) { x *= s; y *= s; }
 
-	// ‰ÁZ‚Ì’è‹`
+	// åŠ ç®—ã®å®šç¾©
 	Vector2d operator+(Vector2d v) { return Vector2d(x + v.x, y + v.y); }
 
-	// Œ¸Z‚Ì’è‹`
+	// æ¸›ç®—ã®å®šç¾©
 	Vector2d operator-(Vector2d v) { return Vector2d(x - v.x, y - v.y); }
 
-	// “àÏ‚Ì’è‹`
+	// å†…ç©ã®å®šç¾©
 	double operator*(Vector2d v) { return x * v.x + y * v.y; }
 
-	// ‘ã“ü‰‰Z‚Ì’è‹`
+	// ä»£å…¥æ¼”ç®—ã®å®šç¾©
 	Vector2d& operator=(const Vector2d& v) { x = v.x; y = v.y; return (*this); }
 
-	// ‰ÁZ‘ã“ü‚Ì’è‹`
+	// åŠ ç®—ä»£å…¥ã®å®šç¾©
 	Vector2d& operator+=(const Vector2d& v) { x += v.x; y += v.y; return (*this); }
 
-	// Œ¸Z‘ã“ü‚Ì’è‹`
+	// æ¸›ç®—ä»£å…¥ã®å®šç¾©
 	Vector2d& operator-=(const Vector2d& v) { x -= v.x; y -= v.y; return (*this); }
 
-	// ’l‚ğo—Í‚·‚é
+	// å€¤ã‚’å‡ºåŠ›ã™ã‚‹
 	void print() { printf("Vector2d(%f %f)\n", x, y); }
 };
 
-// ƒ}ƒCƒiƒX‚Ì•„†‚Ì•t‚¢‚½ƒxƒNƒgƒ‹‚ğˆµ‚¦‚é‚æ‚¤‚É‚·‚é‚½‚ß‚Ì’è‹` —áFb=(-a); ‚Ì‚æ‚¤‚É‹Lq‚Å‚«‚é
+// ãƒã‚¤ãƒŠã‚¹ã®ç¬¦å·ã®ä»˜ã„ãŸãƒ™ã‚¯ãƒˆãƒ«ã‚’æ‰±ãˆã‚‹ã‚ˆã†ã«ã™ã‚‹ãŸã‚ã®å®šç¾© ä¾‹ï¼šb=(-a); ã®ã‚ˆã†ã«è¨˜è¿°ã§ãã‚‹
 Vector2d operator-(const Vector2d& v) { return(Vector2d(-v.x, -v.y)); }
 
-// ƒxƒNƒgƒ‹‚ÆÀ”‚ÌÏ‚ğˆµ‚¦‚é‚æ‚¤‚É‚·‚é‚½‚ß‚Ì’è‹` —áF c=5*a+2*b; c=b*3; ‚Ì‚æ‚¤‚É‹Lq‚Å‚«‚é
+// ãƒ™ã‚¯ãƒˆãƒ«ã¨å®Ÿæ•°ã®ç©ã‚’æ‰±ãˆã‚‹ã‚ˆã†ã«ã™ã‚‹ãŸã‚ã®å®šç¾© ä¾‹ï¼š c=5*a+2*b; c=b*3; ã®ã‚ˆã†ã«è¨˜è¿°ã§ãã‚‹
 Vector2d operator*(const double& k, const Vector2d& v) { return(Vector2d(k * v.x, k * v.y)); }
 Vector2d operator*(const Vector2d& v, const double& k) { return(Vector2d(v.x * k, v.y * k)); }
 
-// ƒxƒNƒgƒ‹‚ğÀ”‚ÅŠ„‚é‘€ì‚ğˆµ‚¦‚é‚æ‚¤‚É‚·‚é‚½‚ß‚Ì’è‹` —áF c=a/2.3; ‚Ì‚æ‚¤‚É‹Lq‚Å‚«‚é
+// ãƒ™ã‚¯ãƒˆãƒ«ã‚’å®Ÿæ•°ã§å‰²ã‚‹æ“ä½œã‚’æ‰±ãˆã‚‹ã‚ˆã†ã«ã™ã‚‹ãŸã‚ã®å®šç¾© ä¾‹ï¼š c=a/2.3; ã®ã‚ˆã†ã«è¨˜è¿°ã§ãã‚‹
 Vector2d operator/(const Vector2d& v, const double& k) { return(Vector2d(v.x / k, v.y / k)); }
 
 // ================================================================================================
 
 
-std::vector<Vector2d> g_ControlPoints; // §Œä“_‚ğŠi”[‚·‚é
+std::vector<Vector2d> g_ControlPoints; // åˆ¶å¾¡ç‚¹ã‚’æ ¼ç´ã™ã‚‹
 
-// •\¦•”•ª‚ğ‚±‚ÌŠÖ”‚Å‹L“ü
+// è¡¨ç¤ºéƒ¨åˆ†ã‚’ã“ã®é–¢æ•°ã§è¨˜å…¥
 void display(void) {
-	glClearColor(1.0, 1.0, 1.0, 1.0);  // Á‹Fw’è
-	glClear(GL_COLOR_BUFFER_BIT);     // ‰æ–ÊÁ‹
+	glClearColor(1.0, 1.0, 1.0, 1.0);  // æ¶ˆå»è‰²æŒ‡å®š
+	glClear(GL_COLOR_BUFFER_BIT);     // ç”»é¢æ¶ˆå»
 
-	// §Œä“_‚Ì•`‰æ
+	// åˆ¶å¾¡ç‚¹ã®æç”»
 	glPointSize(5);
 	glColor3d(0.0, 0.0, 0.0);
 	glBegin(GL_POINTS);
@@ -75,7 +75,7 @@ void display(void) {
 	}
 	glEnd();
 
-	// §Œä“_‚ğŒ‹‚Ôü•ª‚Ì•`‰æ
+	// åˆ¶å¾¡ç‚¹ã‚’çµã¶ç·šåˆ†ã®æç”»
 	glColor3d(1.0, 0.0, 0.0);
 	glLineWidth(1);
 	glBegin(GL_LINE_STRIP);
@@ -84,7 +84,61 @@ void display(void) {
 	}
 	glEnd();
 
-	// š ‚±‚±‚ÉƒxƒWƒF‹Èü‚ğ•`‰æ‚·‚éƒR[ƒh‚ğ’Ç‰Á‚·‚é
+	// â˜… ã“ã“ã«ãƒ™ã‚¸ã‚§æ›²ç·šã‚’æç”»ã™ã‚‹ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã™ã‚‹
+	for (int i = 0; i < ((int)size(g_ControlPoints) - 1) / 3; i++)
+	{
+		const Vector2d p0 = g_ControlPoints[3 * i];
+		const Vector2d p1 = g_ControlPoints[3 * i + 1];
+		const Vector2d p2 = g_ControlPoints[3 * i + 2];
+		const Vector2d p3 = g_ControlPoints[3 * i + 3];
+
+		// ãƒ™ã‚¸ã‚§æ›²ç·šã®æç”»
+
+		glColor3d(0.0, 0.0, 0.0);
+		glLineWidth(1);
+		glBegin(GL_LINE_STRIP);
+
+		for (double t = 0; t < 1.0; t += 0.01)
+		{
+			Vector2d p = pow(1 - t, 3) * p0
+				+ 3 * t * pow(1 - t, 2) * p1
+				+ 3 * t * t * (1 - t) * p2
+				+ pow(t, 3) * p3;
+
+			glVertex2d(p.x, p.y);
+		}
+
+		glEnd();
+
+
+		// æ³•ç·šã®æç”»
+
+		const double width = 20.0;
+		glColor3d(0.0, 0.0, 1.0);
+		glLineWidth(1);
+
+		for (double t = 0; t < 1.0; t += 0.0001)
+		{
+			glBegin(GL_LINES);
+
+			Vector2d p = pow(1 - t, 3) * p0
+				+ 3 * t * pow(1 - t, 2) * p1
+				+ 3 * t * t * (1 - t) * p2
+				+ pow(t, 3) * p3;
+
+			Vector2d p_ = -3 * pow(1 - t, 2) * p0
+				+ (9 * t * t - 12 * t + 3) * p1
+				+ (-9 * t * t + 6 * t) * p2
+				+ 3 * t * t * p3;
+
+			p_.normalize();
+
+			glVertex2d(p.x, p.y);
+			glVertex2d(p.x + -p_.y * width, p.y + p_.x * width);
+
+			glEnd();
+		}
+	}
 
 	glutSwapBuffers();
 }
@@ -96,38 +150,38 @@ void resizeWindow(int w, int h) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	// ƒEƒBƒ“ƒhƒE“à‚ÌÀ•WŒnİ’è
-	// ƒ}ƒEƒXƒNƒŠƒbƒN‚ÌÀ•W‚Æ•`‰æÀ•W‚ªˆê’v‚·‚é‚æ‚¤‚È³“Š‰e
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦å†…ã®åº§æ¨™ç³»è¨­å®š
+	// ãƒã‚¦ã‚¹ã‚¯ãƒªãƒƒã‚¯ã®åº§æ¨™ã¨æç”»åº§æ¨™ãŒä¸€è‡´ã™ã‚‹ã‚ˆã†ãªæ­£æŠ•å½±
 	glOrtho(0, w, h, 0, -10, 10);
 
 	glMatrixMode(GL_MODELVIEW);
 }
 
-// ƒL[ƒ{[ƒhƒCƒxƒ“ƒgˆ—
+// ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã‚¤ãƒ™ãƒ³ãƒˆå‡¦ç†
 void keyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case 'q':
 	case 'Q':
 	case '\033':
-		exit(0);  /* '\033' ‚Í ESC ‚Ì ASCII ƒR[ƒh */
+		exit(0);  /* '\033' ã¯ ESC ã® ASCII ã‚³ãƒ¼ãƒ‰ */
 	default:
 		break;
 	}
 	glutPostRedisplay();
 }
 
-// ƒ}ƒEƒXƒCƒxƒ“ƒgˆ—
+// ãƒã‚¦ã‚¹ã‚¤ãƒ™ãƒ³ãƒˆå‡¦ç†
 void mouse(int button, int state, int x, int y) {
 	if (state == GLUT_DOWN) {
 		switch (button) {
 		case GLUT_LEFT_BUTTON:
-			// ƒNƒŠƒbƒN‚µ‚½ˆÊ’u‚É§Œä“_‚ğ’Ç‰Á
+			// ã‚¯ãƒªãƒƒã‚¯ã—ãŸä½ç½®ã«åˆ¶å¾¡ç‚¹ã‚’è¿½åŠ 
 			g_ControlPoints.push_back(Vector2d(x, y));
 			break;
 		case GLUT_MIDDLE_BUTTON:
 			break;
 		case GLUT_RIGHT_BUTTON:
-			// ––”ö‚Ì§Œä“_‚Ìíœ
+			// æœ«å°¾ã®åˆ¶å¾¡ç‚¹ã®å‰Šé™¤
 			if (!g_ControlPoints.empty()) {
 				g_ControlPoints.pop_back();
 			}
@@ -135,20 +189,20 @@ void mouse(int button, int state, int x, int y) {
 		default:
 			break;
 		}
-		glutPostRedisplay(); // Ä•`‰æ
+		glutPostRedisplay(); // å†æç”»
 	}
 }
 
-// ƒƒCƒ“ƒvƒƒOƒ‰ƒ€
+// ãƒ¡ã‚¤ãƒ³ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
 int main(int argc, char* argv[]) {
-	glutInit(&argc, argv);          // ƒ‰ƒCƒuƒ‰ƒŠ‚Ì‰Šú‰»
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE); // •`‰æƒ‚[ƒh‚Ìw’è
-	glutInitWindowSize(800, 800);  // ƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğw’è
-	glutCreateWindow(argv[0]);      // ƒEƒBƒ“ƒhƒE‚ğì¬
-	glutDisplayFunc(display);       // •\¦ŠÖ”‚ğw’è
-	glutReshapeFunc(resizeWindow);  // ƒEƒBƒ“ƒhƒEƒTƒCƒY‚ª•ÏX‚³‚ê‚½‚Æ‚«‚ÌŠÖ”‚ğw’è
-	glutKeyboardFunc(keyboard);     // ƒL[ƒ{[ƒhƒCƒxƒ“ƒgˆ—ŠÖ”‚ğw’è
-	glutMouseFunc(mouse);           // ƒ}ƒEƒXƒCƒxƒ“ƒgˆ—ŠÖ”‚ğw’è
-	glutMainLoop();                 // ƒCƒxƒ“ƒg‘Ò‚¿
+	glutInit(&argc, argv);          // ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®åˆæœŸåŒ–
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE); // æç”»ãƒ¢ãƒ¼ãƒ‰ã®æŒ‡å®š
+	glutInitWindowSize(800, 800);  // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã‚’æŒ‡å®š
+	glutCreateWindow(argv[0]);      // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ä½œæˆ
+	glutDisplayFunc(display);       // è¡¨ç¤ºé–¢æ•°ã‚’æŒ‡å®š
+	glutReshapeFunc(resizeWindow);  // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºãŒå¤‰æ›´ã•ã‚ŒãŸã¨ãã®é–¢æ•°ã‚’æŒ‡å®š
+	glutKeyboardFunc(keyboard);     // ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã‚¤ãƒ™ãƒ³ãƒˆå‡¦ç†é–¢æ•°ã‚’æŒ‡å®š
+	glutMouseFunc(mouse);           // ãƒã‚¦ã‚¹ã‚¤ãƒ™ãƒ³ãƒˆå‡¦ç†é–¢æ•°ã‚’æŒ‡å®š
+	glutMainLoop();                 // ã‚¤ãƒ™ãƒ³ãƒˆå¾…ã¡
 	return 0;
 }
