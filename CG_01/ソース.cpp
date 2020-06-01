@@ -85,60 +85,6 @@ void display(void) {
 	glEnd();
 
 	// ★ ここにベジェ曲線を描画するコードを追加する
-	for (int i = 0; i < ((int)size(g_ControlPoints) - 1) / 3; i++)
-	{
-		const Vector2d p0 = g_ControlPoints[3 * i];
-		const Vector2d p1 = g_ControlPoints[3 * i + 1];
-		const Vector2d p2 = g_ControlPoints[3 * i + 2];
-		const Vector2d p3 = g_ControlPoints[3 * i + 3];
-
-		// ベジェ曲線の描画
-
-		glColor3d(0.0, 0.0, 0.0);
-		glLineWidth(1);
-		glBegin(GL_LINE_STRIP);
-
-		for (double t = 0; t < 1.0; t += 0.01)
-		{
-			Vector2d p = pow(1 - t, 3) * p0
-				+ 3 * t * pow(1 - t, 2) * p1
-				+ 3 * t * t * (1 - t) * p2
-				+ pow(t, 3) * p3;
-
-			glVertex2d(p.x, p.y);
-		}
-
-		glEnd();
-
-
-		// 法線の描画
-
-		const double width = 20.0;
-		glColor3d(0.0, 0.0, 1.0);
-		glLineWidth(1);
-
-		for (double t = 0; t < 1.0; t += 0.0001)
-		{
-			glBegin(GL_LINES);
-
-			Vector2d p = pow(1 - t, 3) * p0
-				+ 3 * t * pow(1 - t, 2) * p1
-				+ 3 * t * t * (1 - t) * p2
-				+ pow(t, 3) * p3;
-
-			Vector2d p_ = -3 * pow(1 - t, 2) * p0
-				+ (9 * t * t - 12 * t + 3) * p1
-				+ (-9 * t * t + 6 * t) * p2
-				+ 3 * t * t * p3;
-
-			p_.normalize();
-
-			glVertex2d(p.x, p.y);
-			glVertex2d(p.x + -p_.y * width, p.y + p_.x * width);
-
-			glEnd();
-		}
-	}
 
 	glutSwapBuffers();
 }
