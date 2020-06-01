@@ -125,15 +125,23 @@ int main(int argc, char** argv) {
 	// ★課題：以下にコメント文で指示する内容のプログラムコードを追加すること
 
 	// (1) vec を空にする
-
+	vec.clear();
 
 	// (2) 次の2次元ベクトルを vec に格納する  
 	// (5.0, 2.0), (3.2, -2.3), (4.1, 9.2), (-2.0, 4.0), (0.0, -2.7)
-
+	vec.push_back(Vector2d(5.0, 2.0));
+	vec.push_back(Vector2d(3.2, -2.3));
+	vec.push_back(Vector2d(4.1, 9.2));
+	vec.push_back(Vector2d(-2.0, 4.0));
+	vec.push_back(Vector2d(0.0, -2.7));
 
 	// (3) 上記の2次元ベクトルを全て加算した結果を Vector2d vecSum に格納する
-
+	Vector2d vecSum;
+	for (const auto& v : vec) vecSum += v;
+	
 	// (4) vecSum の内容(x,yの値)と、vecSum の長さを出力する
+	vecSum.print();
+	printf("%lf\n", vecSum.length());
 
 
 	// Visual Studio でコンソールがすぐに閉じないようにするため
