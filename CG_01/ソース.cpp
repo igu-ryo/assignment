@@ -85,27 +85,6 @@ void display(void) {
 	glEnd();
 
 	// ★ ここにベジェ曲線を描画するコードを追加する
-	glColor3d(0.0, 0.0, 0.0);
-	glLineWidth(1);
-	glBegin(GL_LINE_STRIP);
-	for (int i = 0; i < ((int)size(g_ControlPoints) - 1) / 3; i++)
-	{
-		for (int t = 0; t < 100; t++)
-		{
-			double t_ = t / 100.0;
-			double x_ = pow(1 - t_, 3) * g_ControlPoints[3 * i].x
-				+ 3 * t_ * pow(1 - t_, 2) * g_ControlPoints[3 * i + 1].x
-				+ 3 * t_ * t_ * (1 - t_) * g_ControlPoints[3 * i + 2].x
-				+ pow(t_, 3) * g_ControlPoints[3 * i + 3].x;
-
-			double y_ = pow(1 - t_, 3) * g_ControlPoints[3 * i].y
-				+ 3 * t_ * pow(1 - t_, 2) * g_ControlPoints[3 * i + 1].y
-				+ 3 * t_ * t_ * (1 - t_) * g_ControlPoints[3 * i + 2].y
-				+ pow(t_, 3) * g_ControlPoints[3 * i + 3].y;
-			glVertex2d(x_, y_);
-		}
-	}
-	glEnd();
 
 	glutSwapBuffers();
 }
