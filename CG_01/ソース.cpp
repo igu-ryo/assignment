@@ -61,6 +61,32 @@ Vector2d operator/(const Vector2d& v, const double& k) { return(Vector2d(v.x / k
 
 std::vector<Vector2d> g_ControlPoints; // 制御点を格納する
 
+// ノットベクトルの要素数 （参考書にあわせて、要素数は10としている）
+const int NUM_NOT = 10;
+
+// ノットベクトル
+// この配列の値を変更することで基底関数が変化する。その結果として形が変わる。
+// 下の例では、一定間隔で値が変化するので、「一様Bスプライン曲線」となる
+double g_NotVector[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+
+// 基底関数 N{i,n}(t)の値を計算する
+double getBaseN(int i, int n, double t) {
+	if (n == 0) {
+		// n が 0 の時だけ t の値に応じて 0 または 1 を返す
+		if (t >= g_NotVector[i] && t < g_NotVector[i + 1]) {
+			return 1.0;
+		}
+		return 0;
+	}
+	else {
+		// ★ここに必要なプログラムコードを記述する
+		// ★再帰（自分自身の関数 getBaseN を呼ぶ処理が必要）
+		// ★係数を計算するときに、ノットが重なる（分母がゼロとなる）ときには、その項を無視する。
+		return 0; // この戻り値は仮のもの。適切に書き変える。
+	}
+}
+
 // 表示部分をこの関数で記入
 void display(void) {
 	glClearColor(1.0, 1.0, 1.0, 1.0);  // 消去色指定
@@ -84,72 +110,9 @@ void display(void) {
 	}
 	glEnd();
 
-	// ★ ここにベジェ曲線を描画するコードを追加する
-	for (int i = 0; i < ((int)size(g_ControlPoints) - 1) / 3; i++)
-	{
-		const Vector2d p0 = g_ControlPoints[3 * i];
-		const Vector2d p1 = g_ControlPoints[3 * i + 1];
-		const Vector2d p2 = g_ControlPoints[3 * i + 2];
-		const Vector2d p3 = g_ControlPoints[3 * i + 3];
-
-		// ベジェ曲線の描画
-
-		glColor3d(0.0, 0.0, 0.0);
-		glLineWidth(1);
-		glBegin(GL_LINE_STRIP);
-
-		for (double t = 0; t < 1.0; t += 0.01)
-		{
-			Vector2d p = pow(1 - t, 3) * p0
-				+ 3 * t * pow(1 - t, 2) * p1
-				+ 3 * t * t * (1 - t) * p2
-				+ pow(t, 3) * p3;
-
-			glVertex2d(p.x, p.y);
-		}
-
-		glEnd();
-
-
-		// 法線の描画
-
-		glColor3d(0.0, 0.0, 1.0);
-		glLineWidth(1);
-
-		for (double t = 0; t < 1.0; t += 0.0001)
-		{
-			glBegin(GL_LINES);
-
-			Vector2d p = pow(1 - t, 3) * p0
-				+ 3 * t * pow(1 - t, 2) * p1
-				+ 3 * t * t * (1 - t) * p2
-				+ pow(t, 3) * p3;
-			
-			// 1階微分
-			Vector2d p_ = -3 * pow(1 - t, 2) * p0
-				+ (9 * t * t - 12 * t + 3) * p1
-				+ (-9 * t * t + 6 * t) * p2
-				+ 3 * t * t * p3;
-
-			// 2階微分
-			Vector2d _p_ = 6 * (1 - t) * p0
-				+ (18 * t - 12) * p1
-				+ (-18 * t + 6) * p2
-				+ 6 * t * p3;
-
-			// 曲率
-			double k = (p_.x * _p_.y - p_.y * _p_.x) / sqrt(pow((p_.x * p_.x + p_.y * p_.y), 3));
-
-			double width = fmin(10.0, 1000 * k); // 線の太さを制限する
-
-			p_.normalize();
-
-			glVertex2d(p.x, p.y);
-			glVertex2d(p.x + -p_.y * width, p.y + p_.x * width);
-
-			glEnd();
-		}
-	}
+	// ★ ここにBスプライン曲線を描画するプログラムコードを入れる
+	// ヒント1: 3次Bスプラインの場合は制御点を4つ入れるまでは何も描けない
+	// ヒント2: パラメータtの値の取り得る範囲に注意
 
 	glutSwapBuffers();
 }
@@ -187,7 +150,11 @@ void mouse(int button, int state, int x, int y) {
 		switch (button) {
 		case GLUT_LEFT_BUTTON:
 			// クリックした位置に制御点を追加
-			g_ControlPoints.push_back(Vector2d(x, y));
+			// ノット数を増やせばいくらでも制御点を追加できるが、今回はNUM_NOTの値で固定されているので
+			// いくらでも追加できるわけではない
+			if (g_ControlPoints.size() < NUM_NOT - 4) {
+				g_ControlPoints.push_back(Vector2d(x, y));
+			}
 			break;
 		case GLUT_MIDDLE_BUTTON:
 			break;
