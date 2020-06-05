@@ -83,7 +83,15 @@ double getBaseN(int i, int n, double t) {
 		// ★ここに必要なプログラムコードを記述する
 		// ★再帰（自分自身の関数 getBaseN を呼ぶ処理が必要）
 		// ★係数を計算するときに、ノットが重なる（分母がゼロとなる）ときには、その項を無視する。
-		return 0; // この戻り値は仮のもの。適切に書き変える。
+		double f, f1, f2;
+		f1 = (g_NotVector[i + n] - g_NotVector[i]) != 0
+			? (t - g_NotVector[i]) / (g_NotVector[i + n] - g_NotVector[i]) * getBaseN(i, n - 1, t)
+			: 0;
+		f2 = (g_NotVector[i + n + 1] - g_NotVector[i + 1]) != 0
+			? (g_NotVector[i + n + 1] - t) / (g_NotVector[i + n + 1] - g_NotVector[i + 1]) * getBaseN(i + 1, n - 1, t)
+			: 0;
+		f = f1 + f2;
+		return f;
 	}
 }
 
@@ -113,6 +121,28 @@ void display(void) {
 	// ★ ここにBスプライン曲線を描画するプログラムコードを入れる
 	// ヒント1: 3次Bスプラインの場合は制御点を4つ入れるまでは何も描けない
 	// ヒント2: パラメータtの値の取り得る範囲に注意
+
+	const int spline_d = 3; // スプラインの次数
+	const int spline_seg = (int)g_ControlPoints.size() - spline_d; // スプラインのセグメント数
+
+	if (spline_seg > 0)
+	{
+		glColor3d(0.0, 0.0, 0.0);
+		glLineWidth(1);
+		glBegin(GL_LINE_STRIP);
+
+		for (double t = g_NotVector[spline_d]; t <= g_NotVector[spline_d + spline_seg]; t += 0.01)
+		{
+			Vector2d p;
+			for (int i = 0; i <= spline_d + spline_seg - 1; i++)
+			{
+				p += getBaseN(i, spline_d, t) * g_ControlPoints[i];
+			}
+			glVertex2d(p.x, p.y);
+		}
+
+		glEnd();
+	}
 
 	glutSwapBuffers();
 }
