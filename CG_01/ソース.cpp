@@ -62,12 +62,23 @@ Vector2d operator/(const Vector2d& v, const double& k) { return(Vector2d(v.x / k
 std::vector<Vector2d> g_ControlPoints; // 制御点を格納する
 
 // ノットベクトルの要素数 （参考書にあわせて、要素数は10としている）
-const int NUM_NOT = 10;
+const int NUM_NOT = 15;
+const int spline_d = 5; // スプラインの次数
+
 
 // ノットベクトル
 // この配列の値を変更することで基底関数が変化する。その結果として形が変わる。
 // 下の例では、一定間隔で値が変化するので、「一様Bスプライン曲線」となる
-double g_NotVector[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+double g_NotVector[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 ,14 };
+
+// クリックした位置と最も近い制御点のインデックス
+int g_Near_i = 0;
+
+// 制御点の移動フラグ
+bool g_MoveFlg = false;
+
+// グラフを描くかどうかのグラフ
+bool g_GraphFlg = false;
 
 
 // 基底関数 N{i,n}(t)の値を計算する
@@ -122,13 +133,13 @@ void display(void) {
 	// ヒント1: 3次Bスプラインの場合は制御点を4つ入れるまでは何も描けない
 	// ヒント2: パラメータtの値の取り得る範囲に注意
 
-	const int spline_d = 3; // スプラインの次数
 	const int spline_seg = (int)g_ControlPoints.size() - spline_d; // スプラインのセグメント数
 
 	if (spline_seg > 0)
 	{
+		// Bスプライン曲線の描画
 		glColor3d(0.0, 0.0, 0.0);
-		glLineWidth(1);
+		glLineWidth(5);
 		glBegin(GL_LINE_STRIP);
 
 		for (double t = g_NotVector[spline_d]; t <= g_NotVector[spline_d + spline_seg]; t += 0.01)
@@ -142,6 +153,83 @@ void display(void) {
 		}
 
 		glEnd();
+
+
+
+		// 法線の描画
+		const double width = 10.0;
+		glColor3d(0.9, 0.9, 0.9);
+		glLineWidth(1);
+		
+		const double delta_t = 0.0001;
+		for (double t = g_NotVector[spline_d]; t <= g_NotVector[spline_d + spline_seg]; t += 0.001)
+		{
+			Vector2d p;
+			for (int i = 0; i <= spline_d + spline_seg - 1; i++)
+			{
+				p += getBaseN(i, spline_d, t) * g_ControlPoints[i];
+			}
+
+			Vector2d p_;
+			for (int i = 0; i <= spline_d + spline_seg - 1; i++)
+			{
+				p_ += getBaseN(i, spline_d, t + delta_t) * g_ControlPoints[i];
+			}
+
+			Vector2d dp_dt = (p_ - p) / delta_t;
+			dp_dt.normalize();
+			
+			glBegin(GL_LINES);
+
+			glVertex2d(p.x, p.y);
+			glVertex2d(p.x + -dp_dt.y * width, p.y + dp_dt.x * width);
+
+			glEnd();
+		}
+
+
+
+		// セグメント境界点の描画
+		glColor3d(0.0, 0.0, 0.0);
+		glBegin(GL_POINTS);
+
+		for (int j = spline_d + 1; j <= spline_d + spline_seg - 1; j++)
+		{
+			double t = g_NotVector[j];
+			Vector2d p;
+			for (int i = 0; i <= spline_d + spline_seg - 1; i++)
+			{
+				p += getBaseN(i, spline_d, t) * g_ControlPoints[i];
+			}
+			glVertex2d(p.x, p.y);
+		}
+
+		glEnd();
+	}
+
+
+
+	// 基底関数のグラフの描画
+	if (g_GraphFlg)
+	{
+		glClearColor(1.0, 1.0, 1.0, 1.0);  // 消去色指定
+		glClear(GL_COLOR_BUFFER_BIT);     // 画面消去
+
+		glColor3d(0.0, 0.0, 0.0);
+
+		for (int i = 0; i < NUM_NOT - spline_d - 1; i++)
+		{
+			glBegin(GL_LINE_STRIP);
+
+			for (double t = g_NotVector[i]; t <= g_NotVector[i + spline_d]; t += 0.1)
+			{
+				double n = getBaseN(i, spline_d, t);
+				glVertex2d(20 + t * 30, 400 - n * 100);
+			}
+
+			glEnd();
+		}
+		
 	}
 
 	glutSwapBuffers();
@@ -163,11 +251,21 @@ void resizeWindow(int w, int h) {
 
 // キーボードイベント処理
 void keyboard(unsigned char key, int x, int y) {
+	int i;
+	double value;
 	switch (key) {
 	case 'q':
 	case 'Q':
 	case '\033':
 		exit(0);  /* '\033' は ESC の ASCII コード */
+		break;
+	case 'c':
+		scanf_s("%d:%lf", &i, &value);
+		g_NotVector[i] = value;
+		break;
+	case 'g':
+		g_GraphFlg ^= 1;
+		break;
 	default:
 		break;
 	}
@@ -177,13 +275,27 @@ void keyboard(unsigned char key, int x, int y) {
 // マウスイベント処理
 void mouse(int button, int state, int x, int y) {
 	if (state == GLUT_DOWN) {
+		Vector2d clickPos(x, y);
+		int min_d;
+
 		switch (button) {
 		case GLUT_LEFT_BUTTON:
 			// クリックした位置に制御点を追加
 			// ノット数を増やせばいくらでも制御点を追加できるが、今回はNUM_NOTの値で固定されているので
 			// いくらでも追加できるわけではない
-			if (g_ControlPoints.size() < NUM_NOT - 4) {
+			if (g_ControlPoints.size() < NUM_NOT - spline_d - 1) {
 				g_ControlPoints.push_back(Vector2d(x, y));
+			}
+
+			// クリックされた位置と一番近い制御点を選ぶ
+			min_d = 1000000000;
+			for (int i = 0; i < g_ControlPoints.size(); i++)
+			{
+				if (min_d > (g_ControlPoints[i] - clickPos).length())
+				{
+					min_d = (g_ControlPoints[i] - clickPos).length();
+					g_Near_i = i;
+				}
 			}
 			break;
 		case GLUT_MIDDLE_BUTTON:
@@ -199,6 +311,20 @@ void mouse(int button, int state, int x, int y) {
 		}
 		glutPostRedisplay(); // 再描画
 	}
+	else if (state == GLUT_UP)
+	{
+		if (g_MoveFlg)
+		{
+			g_ControlPoints[g_Near_i] = Vector2d(x, y);
+			g_MoveFlg = false;
+		}
+	}
+}
+
+// マウスドラッグ処理
+void motion(int x, int y)
+{
+	g_MoveFlg = true;
 }
 
 // メインプログラム
@@ -211,6 +337,7 @@ int main(int argc, char* argv[]) {
 	glutReshapeFunc(resizeWindow);  // ウィンドウサイズが変更されたときの関数を指定
 	glutKeyboardFunc(keyboard);     // キーボードイベント処理関数を指定
 	glutMouseFunc(mouse);           // マウスイベント処理関数を指定
+	glutMotionFunc(motion);         // マウスドラッグ処理関数を指定
 	glutMainLoop();                 // イベント待ち
 	return 0;
 }
